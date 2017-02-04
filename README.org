@@ -1,0 +1,40 @@
+
+*bslocate* - command-line program which performs binary search in large text files. It finds the first line which matches given key and prints it's offset from the begining of the file. Keys are compared lexicographically.
+
+lambdaprime <id.blackmesa@gmail.com>
+
+* Usage
+
+java -jar bslocate.jar [-p] <KEY_REGEXP> <KEY> <file>
+
+Where KEY is an integer and KEY_REGEXP is regexp to extract integer value from the line.
+
+* Options
+
+-v -- be verbose and print extracted keys per each line
+
+* Examples
+
+Lets assume we have a large file which looks like that:
+
+#+BEGIN_EXAMPLE
+[ /var/log ]$ head Xorg.0.log
+
+[   304.349] 
+X.Org X Server 1.15.1
+Release Date: 2014-04-13
+[   304.350] X Protocol Version 11, Revision 0
+[   304.351] Build Operating System: Linux 3.2.0-76-generic x86_64 Ubuntu
+#+END_EXAMPLE
+
+Suppose we need to find where starts the entry with id 6354. We cannot use grep because file is large and the consecutive search will be very slow.
+We see that this file has lines which can be used to binary search the lines with id 6354. We know that all ids are increasing so what we need is to build a regexp KEY_REGEXP which will be able to extract the id from the line which *bslocate* can use for binary search the first line with queried id. For this file the KEY_REGEXP is "([0-9]*)\." so we call application like that:
+
+#+BEGIN_EXAMPLE
+[ /var/log ]$ java -jar bslocate.jar "([0-9]*)\." "6354" /var/log/Xorg.0.log
+52106
+[  6354.920] (II) NVIDIA(0): ACPI: failed to connect to the ACPI event daemon; the daemon
+[ /var/log ]$
+#+END_EXAMPLE
+
+Where 52106 is offset in bytes to the first line with given id.
