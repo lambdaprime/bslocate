@@ -5,13 +5,15 @@ lambdaprime <id.blackmesa@gmail.com>
 
 * Usage
 
-java -jar bslocate.jar [-p] <KEY_REGEXP> <KEY> <file>
+java -jar bslocate.jar [-v] [-s START_OFFSET] [-e END_OFFSET] <KEY_REGEXP> <KEY> <file>
 
 Where KEY is an integer and KEY_REGEXP is regexp to extract integer value from the line.
 
 * Options
 
 -v -- be verbose and print extracted keys per each line
+-s START_OFFSET -- offset in bytes where to start search
+-e END_OFFSET -- offset in bytes until where to search
 
 * Examples
 
