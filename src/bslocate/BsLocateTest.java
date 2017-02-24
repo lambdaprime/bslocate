@@ -105,7 +105,14 @@ public class BsLocateTest {
         assertEquals(442, r.offset);    
         assertEquals("af 12:38 If you did not twinkle so.", r.line);
 
-        r = BsLocate.binSearch(keyRegxp, 38, file, 318, -1);
+    }
+
+    @Test
+    public void test_binSearch_range() throws IOException {
+        String file = createFile();
+        String keyRegxp = "^[a-z]* \\d*:(\\d*)";
+        
+        Result r = BsLocate.binSearch(keyRegxp, 38, file, 318, -1);
         assertEquals(442, r.offset);
         assertEquals("af 12:38 If you did not twinkle so.", r.line);
 
@@ -114,7 +121,24 @@ public class BsLocateTest {
 
         r = BsLocate.binSearch(keyRegxp, 37, file, 158, 317);
         assertTrue(r == null);
-        
     }
 
+    @Test
+    public void test_binSearch_upper_bound() throws IOException {
+        String file = createFile();
+        String keyRegxp = "^[a-z]* \\d*:(\\d*)";
+        
+        Result r = binSearch(keyRegxp, 31, file);
+        assertEquals(42, r.offset);    
+        assertEquals("asdf 12:34 How I wonder what you are.", r.line);
+        
+        r = binSearch(keyRegxp, 32, file);
+        assertEquals(42, r.offset);    
+        assertEquals("asdf 12:34 How I wonder what you are.", r.line);
+        
+        r = binSearch(keyRegxp, 33, file);
+        assertEquals(42, r.offset);    
+        assertEquals("asdf 12:34 How I wonder what you are.", r.line);
+    }
+    
 }

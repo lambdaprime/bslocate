@@ -1,5 +1,5 @@
 
-*bslocate* - command-line program which performs binary search in large text files. It finds the first line which matches given key and prints it's offset from the begining of the file. Keys are compared lexicographically.
+*bslocate* - command-line program which performs binary search in large text files. It finds the first line which matches given key and prints offset from the begining of the file to this line in bytes. Keys are compared using natural comparison.
 
 lambdaprime <id.blackmesa@gmail.com>
 
@@ -7,7 +7,7 @@ lambdaprime <id.blackmesa@gmail.com>
 
 java -jar bslocate.jar [-v] [-s START_OFFSET] [-e END_OFFSET] <KEY_REGEXP> <KEY> <file>
 
-Where KEY is an integer and KEY_REGEXP is regexp to extract integer value from the line.
+Where KEY is an integer which location needs to be found and KEY_REGEXP is regexp which maps each line to integer value.
 
 * Options
 
@@ -19,26 +19,132 @@ Where KEY is an integer and KEY_REGEXP is regexp to extract integer value from t
 
 * Examples
 
+** Find line with particular id
+
 Lets assume we have a large file which looks like that:
 
 #+BEGIN_EXAMPLE
-[ /var/log ]$ head Xorg.0.log
-
+$ head Xorg.0.log
+[    16.883] 
+X.Org X Server 1.15.1
+Release Date: 2014-04-13
+[    16.883] X Protocol Version 11, Revision 0
+[    16.884] Build Operating System: Linux 3.2.0-76-generic x86_64 Ubuntu
+...
+...
+...
 [   304.349] 
 X.Org X Server 1.15.1
 Release Date: 2014-04-13
 [   304.350] X Protocol Version 11, Revision 0
 [   304.351] Build Operating System: Linux 3.2.0-76-generic x86_64 Ubuntu
+...
+...
+...
 #+END_EXAMPLE
 
-Suppose we need to find where starts the entry with id 6354. We cannot use grep because file is large and the consecutive search will be very slow.
-We see that this file has lines which can be used to binary search the lines with id 6354. We know that all ids are increasing so what we need is to build a regexp KEY_REGEXP which will be able to extract the id from the line which *bslocate* can use for binary search the first line with queried id. For this file the KEY_REGEXP is "([0-9]*)\." so we call application like that:
+Suppose we need to find where starts the entry with id "6354.*". We cannot use grep because file is large and the consecutive search will be very slow.
+But we can notice that each line has an unique id and these ids are increasing numbers. If we map all lines to these ids which they hold we will get:
 
 #+BEGIN_EXAMPLE
-[ /var/log ]$ java -jar bslocate.jar "([0-9]*)\." "6354" /var/log/Xorg.0.log
+16
+16
+16
+...
+...
+...
+304
+304
+304
+...
+...
+#+END_EXAMPLE
+
+Given that queried id can be found very easily - using binary search.
+
+*bslocate* implements exectly these idea. You build a regexp KEY_REGEXP which maps the line to key (in our case it is id) and pass it to *bslocate* which will use it to binary search the queried key.
+For given file above the KEY_REGEXP is "([0-9]*)\." so we call *bslocate* like that:
+
+#+BEGIN_EXAMPLE
+$ java -jar bslocate.jar "([0-9]*)\." "6354" /var/log/Xorg.0.log
 52106
 [  6354.920] (II) NVIDIA(0): ACPI: failed to connect to the ACPI event daemon; the daemon
-[ /var/log ]$
+$
 #+END_EXAMPLE
 
 Where 52106 is offset in bytes to the first line with given id.
+
+** Show log lines inside particular timeframe
+
+You have Tomcat log file localhost_access_log.2017-01-05:
+
+#+BEGIN_EXAMPLE
+$ cat localhost_access_log.2017-01-05.txt
+...
+127.0.0.1 - - [05/Jan/2017:18:44:10 +0100] "GET /PriorityQueue/sync?Content-type=application/json HTTP/1.1" 404 -
+127.0.0.1 - - [05/Jan/2017:18:44:10 +0100] "GET /PriorityQueue/sync?Content-type=application/json HTTP/1.1" 404 -
+127.0.0.1 - - [05/Jan/2017:18:44:10 +0100] "GET /PriorityQueue/sync?Content-type=application/json HTTP/1.1" 404 -
+...
+...
+...
+#+END_EXAMPLE
+
+You want to see log lines between 20:37:35 and 20:37:40. The file is 10 GB and grep is slow for it. *bslocate* can be used for such purposes. 
+
+1. Find where starts/ends lines for 20:* o'clock meaning within timeframe 20:00 - 21:00.
+
+   To find where 20:00 starts we use regexp "05/Jan/2017:([0-9]*)" and search for key 20:
+   
+   #+BEGIN_EXAMPLE
+   $ java -jar bslocate.jar "05/Jan/2017:([0-9]*)" "20" localhost_access_log.2017-01-05.txt
+   354216
+   127.0.0.1 - - [05/Jan/2017:20:37:34 +0100] "GET /PriorityQueue/sync?Content-type=application/json HTTP/1.1" 204 -
+   $
+   #+END_EXAMPLE
+
+   To find where 20:00 ends we use same regexp except now we search for key 21:
+   
+   #+BEGIN_EXAMPLE
+   $ java -jar bslocate.jar "05/Jan/2017:([0-9]*)" "21" localhost_access_log.2017-01-05.txt
+   $ 
+   #+END_EXAMPLE
+
+   *bslocate* returned nothing, it means that last line in log file has key less than 21. Therefore log lines for timeframe 20:00 - 21:00 starts from 354216 byte and goes until end of the file.
+
+2. Find where starts/ends lines for 20:37:* meaning within timeframe 20:37 - 20:38. Since we know the location for log lines with 20 o'clock which is [354216, EOF] we specify it with option "-s" (we don't need to use option "-e" because if it is not specified EOF is used)
+
+   Start position for 20:37
+
+   #+BEGIN_EXAMPLE
+   $ java -jar bslocate.jar -s 354216 "05/Jan/2017:20:([0-9]*)" "37" localhost_access_log.2017-01-05.txt
+   354216
+   127.0.0.1 - - [05/Jan/2017:20:37:34 +0100] "GET /PriorityQueue/sync?Content-type=application/json HTTP/1.1" 204 -
+   $
+   #+END_EXAMPLE
+
+   End position for 20:37:
+
+   #+BEGIN_EXAMPLE
+   $ java -jar bslocate.jar -s 354216 "05/Jan/2017:20:([0-9]*)" "38" localhost_access_log.2017-01-05.txt
+   645372
+   127.0.0.1 - - [05/Jan/2017:20:41:30 +0100] "GET /PriorityQueue/sync?Content-type=application/json HTTP/1.1" 204 -
+   $
+   #+END_EXAMPLE
+
+3. Knowing the location for lines with 20:37:* which is [354216, 645372] we can now find all lines between 20:37:35 and 20:37:40
+
+   #+BEGIN_EXAMPLE
+   $ java -jar bslocate.jar -s 354216 -e 645372 "05/Jan/2017:20:37:([0-9]*)" "35" localhost_access_log.2017-01-05.txt
+   357294
+   127.0.0.1 - - [05/Jan/2017:20:37:35 +0100] "GET /PriorityQueue/sync?Content-type=application/json HTTP/1.1" 204 -
+   $ java -jar bslocate.jar -s 354216 -e 645372 "05/Jan/2017:20:37:([0-9]*)" "41" localhost_access_log.2017-01-05.txt
+   568194
+   127.0.0.1 - - [05/Jan/2017:20:37:41 +0100] "GET /PriorityQueue/sync?Content-type=application/json HTTP/1.1" 204 -
+   $
+   #+END_EXAMPLE
+
+   Number of bytes with interesting log lines is 568194 - 357294 = 210900. Now we can show them using dd with calculated offset:
+
+   #+BEGIN_EXAMPLE
+   $ dd if=localhost_access_log.2017-01-05.txt skip=357294 count=210900 ibs=1
+   #+END_EXAMPLE

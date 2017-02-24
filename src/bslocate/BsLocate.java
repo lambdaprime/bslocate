@@ -60,7 +60,7 @@ public class BsLocate {
         if (key < KEY)
             return binSearch(res.offset, e);
         Result l = binSearch(s, piv);
-        if (l == null && key == KEY)
+        if (l == null)
             return res;
         return l;
     }
