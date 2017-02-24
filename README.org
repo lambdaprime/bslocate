@@ -137,8 +137,8 @@ You want to see log lines between 20:37:35 and 20:37:40. The file is 10 GB and g
    127.0.0.1 - - [05/Jan/2017:20:37:41 +0100] "GET /PriorityQueue/sync?Content-type=application/json HTTP/1.1" 204 -
    #+END_EXAMPLE
 
-   Number of bytes with interesting log lines is 568194 - 357294 = 210900. Now we can show them using dd with calculated offset:
+Number of bytes with interesting log lines is 568194 - 357294 = 210900. Now we can show them using dd with calculated offset:
 
-   #+BEGIN_EXAMPLE
-   $ dd if=localhost_access_log.2017-01-05.txt skip=357294 count=210900 ibs=1
-   #+END_EXAMPLE
+#+BEGIN_EXAMPLE
+$ dd if=localhost_access_log.2017-01-05.txt skip=357294 count=210900 ibs=1
+#+END_EXAMPLE
