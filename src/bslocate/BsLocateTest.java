@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -35,7 +36,7 @@ public class BsLocateTest {
                 "af 12:38 If you did not twinkle so."
         );
         Path p = Files.createTempFile("g", "p");
-        Files.write(p, lines, StandardOpenOption.WRITE);
+        Files.write(p, lines, Charset.defaultCharset(), StandardOpenOption.WRITE);
         return p.toString();
     }
     

@@ -99,9 +99,10 @@ public class BsLocate {
     
     @SuppressWarnings("resource")
     static void usage() throws IOException {
-        new Scanner(BsLocate.class.getResource("README.org").openStream())
-            .useDelimiter("\n")
-            .forEachRemaining(System.out::println);
+        Scanner scanner = new Scanner(BsLocate.class.getResource("README.org").openStream())
+                .useDelimiter("\n");
+        while (scanner.hasNext())
+            System.out.println(scanner.next());
     }
     
     static long optionValue(List<String> opts, String opt) {
