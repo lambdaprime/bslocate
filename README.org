@@ -69,7 +69,6 @@ For given file above the KEY_REGEXP is "([0-9]*)\." so we call *bslocate* as fol
 $ java -jar bslocate.jar "([0-9]*)\." "6354" /var/log/Xorg.0.log
 52106
 [  6354.920] (II) NVIDIA(0): ACPI: failed to connect to the ACPI event daemon; the daemon
-$
 #+END_EXAMPLE
 
 Where 52106 is offset in bytes to the first line with given id.
