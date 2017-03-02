@@ -142,3 +142,4 @@ Number of bytes with interesting log lines is 568194 - 357294 = 210900. Now we c
 #+BEGIN_EXAMPLE
 $ dd if=localhost_access_log.2017-01-05.txt skip=357294 count=210900 ibs=1
 #+END_EXAMPLE
+
