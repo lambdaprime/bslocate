@@ -1,5 +1,7 @@
 
-*bslocate* - command-line program which performs binary search in large text files. It finds the first line which matches given key and prints offset from the begining of the file to this line in bytes. Keys are compared using natural comparison.
+*bslocate* - command-line program which performs binary search in large text files. It finds the first line which matches given key and prints offset from the begining of the file to this line in bytes. Keys are compared using natural comparison. 
+
+bslocate may be useful when you want to grep large text file and sequential search is very slow or if you are using complex regular expressions (with * etc.) which slows down grep too.
 
 lambdaprime <id.blackmesa@gmail.com>
 
@@ -43,8 +45,7 @@ Release Date: 2014-04-13
 ...
 #+END_EXAMPLE
 
-Suppose we need to find where starts the entry with id "6354.*". We cannot use grep because file is large and the consecutive search will be very slow.
-But we can notice that each line has an unique id and these ids are increasing numbers. If we map all lines to these ids which they hold we will get:
+Suppose we need to find where starts the entry with id "6354.*". We see that each line has an unique id and these ids are increasing numbers. If we map all lines to these ids which they hold we will get:
 
 #+BEGIN_EXAMPLE
 16
@@ -118,7 +119,7 @@ You want to see log lines between 20:37:35 and 20:37:40. The file is 10 GB and g
    127.0.0.1 - - [05/Jan/2017:20:37:34 +0100] "GET /PriorityQueue/sync?Content-type=application/json HTTP/1.1" 204 -
    #+END_EXAMPLE
 
-   End position for 20:37:
+   End position for 20:37
 
    #+BEGIN_EXAMPLE
    $ java -jar bslocate.jar -s 354216 "05/Jan/2017:20:([0-9]*)" "38" localhost_access_log.2017-01-05.txt
